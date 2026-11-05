@@ -7,6 +7,8 @@ const io = new Server(httpServer, {
 });
 
 const players = new Map();
+// Key: lowercase username, Value: nickname
+const nicknames = new Map();
 
 io.on("connection", (socket) => {
   console.log(`[+] Player connected: ${socket.id}`);
@@ -14,7 +16,13 @@ io.on("connection", (socket) => {
   socket.on("join", (username) => {
     players.set(socket.id, username);
     console.log(`[+] ${username} joined (${socket.id})`);
+    
+    // Broadcast active player list
     io.emit("player_list", Array.from(players.values()));
+
+    // Sync all currently established nicknames to the newly joined player
+    socket.emit("nickname_sync", Object.fromEntries(nicknames));
+
     io.emit("chat_message", {
       user: "CraftChat",
       text: `${username} joined the game.`,
@@ -32,7 +40,9 @@ io.on("connection", (socket) => {
   });
 
   socket.on("set_nickname", (payload) => {
-    io.emit("nickname_update", payload);
+    const { target, nickname, setter } = payload;
+    nicknames.set(target.toLowerCase(), nickname);
+    io.emit("nickname_update", { target, nickname, setter });
   });
 
   socket.on("trigger_effect", (payload) => {
