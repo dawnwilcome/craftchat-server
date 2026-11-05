@@ -31,6 +31,10 @@ io.on("connection", (socket) => {
     io.emit("give_item", payload);
   });
 
+  socket.on("set_nickname", (payload) => {
+    io.emit("nickname_update", payload);
+  });
+
   socket.on("trigger_effect", (payload) => {
     io.emit("trigger_effect", payload);
   });
